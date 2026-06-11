@@ -11,6 +11,8 @@ langfuse:
       secretKeyRef:
         name: langfuse
         key: nextauth-secret
+  features:
+    signUpDisabled: ${var.signup_disabled}
 postgresql:
   deploy: false
   host: ${azurerm_private_endpoint.postgres.private_service_connection[0].private_ip_address}:5432
@@ -26,8 +28,8 @@ clickhouse:
     existingSecretKey: clickhouse-password
 redis:
   deploy: false
-  host: ${azurerm_redis_cache.this.name}.redis.cache.windows.net
-  port: 6380
+  host: ${azurerm_managed_redis.this.hostname}
+  port: ${azurerm_managed_redis.this.default_database[0].port}
   tls:
     enabled: true
   auth:
@@ -43,7 +45,7 @@ s3:
     value: ${azurerm_storage_account.this.name}
   secretAccessKey:
     secretKeyRef:
-      name: ${kubernetes_secret.langfuse.metadata[0].name}
+      name: ${kubernetes_secret_v1.langfuse.metadata[0].name}
       key: storage-access-key
   forcePathStyle: false
   eventUpload:
@@ -57,7 +59,7 @@ EOT
 langfuse:
   encryptionKey:
     secretKeyRef:
-      name: ${kubernetes_secret.langfuse.metadata[0].name}
+      name: ${kubernetes_secret_v1.langfuse.metadata[0].name}
       key: encryption-key
 EOT
   additional_env_values = length(var.additional_env) == 0 ? "" : <<EOT
@@ -85,7 +87,7 @@ langfuse:
 EOT
 }
 
-resource "kubernetes_namespace" "langfuse" {
+resource "kubernetes_namespace_v1" "langfuse" {
   metadata {
     name = "langfuse"
   }
@@ -107,14 +109,14 @@ resource "random_bytes" "encryption_key" {
   length = 32
 }
 
-resource "kubernetes_secret" "langfuse" {
+resource "kubernetes_secret_v1" "langfuse" {
   metadata {
     name      = "langfuse"
     namespace = "langfuse"
   }
 
   data = {
-    "redis-password"      = azurerm_redis_cache.this.primary_access_key
+    "redis-password"      = azurerm_managed_redis.this.default_database[0].primary_access_key
     "postgres-password"   = azurerm_postgresql_flexible_server.this.administrator_password
     "storage-access-key"  = azurerm_storage_account.this.primary_access_key
     "salt"                = random_bytes.salt.base64
