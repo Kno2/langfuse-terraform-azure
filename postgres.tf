@@ -32,7 +32,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
   dynamic "high_availability" {
     for_each = var.postgres_instance_count > 1 ? [1] : []
     content {
-      mode = var.postgres_ha_mode
+      mode                      = var.postgres_ha_mode
       standby_availability_zone = "3"
     }
   }

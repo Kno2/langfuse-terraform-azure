@@ -189,3 +189,46 @@ variable "signup_disabled" {
   type        = bool
   default     = false
 }
+
+variable "smtp_connection_value" {
+  description = "SMTP connection URL for email sending (sets additionalEnv entry in the Helm chart). Example: smtps://user:"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+# Entra ID (Azure AD) SSO. Rendered through the chart's first-class
+# langfuse.auth.providers.azureAd values, NOT additional_env: the chart's
+# nextauthEnv helper already emits AUTH_AZURE_AD_* and AUTH_DISABLE_USERNAME_PASSWORD,
+# so routing them through additionalEnv would create duplicate env entries that
+# Helm's strategic merge collapses.
+variable "azure_ad_client_id" {
+  description = "Application (client) ID of the Entra ID app registration used for SSO. Set to null to leave SSO unconfigured."
+  type        = string
+  default     = null
+}
+
+variable "azure_ad_tenant_id" {
+  description = "Entra ID directory (tenant) ID for the SSO app registration."
+  type        = string
+  default     = null
+}
+
+variable "azure_ad_client_secret_value" {
+  description = "Client secret for the Entra ID app registration. Stored in the 'langfuse' Kubernetes secret and referenced by secretKeyRef, never rendered into Helm values."
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "azure_ad_allow_account_linking" {
+  description = "Allow an Entra ID sign-in to link to an existing Langfuse account with the same email address. Required when migrating existing email/password users to SSO."
+  type        = bool
+  default     = true
+}
+
+variable "disable_username_password" {
+  description = "Disable email/password sign-in, leaving SSO as the only auth path (sets langfuse.auth.disableUsernamePassword). Only enable after verifying SSO sign-in works, or you will lock yourself out."
+  type        = bool
+  default     = false
+}

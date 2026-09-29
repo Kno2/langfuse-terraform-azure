@@ -22,8 +22,14 @@ resource "azurerm_managed_redis" "this" {
     # Access keys required for Langfuse connection
     access_keys_authentication_enabled = true
     client_protocol                    = "Encrypted"
-    clustering_policy                  = "OSSCluster"
-    eviction_policy                    = "NoEviction"
+    # OSSCluster is required for Langfuse: its BullMQ queues rely on EVALSHA
+    # scripts, which EnterpriseCluster only allows when all keys share a hash
+    # slot (BullMQ keys don't). Langfuse's cluster mode (redis.cluster.* in
+    # langfuse.tf) hash-tags its queue keys to satisfy OSS cluster slot rules,
+    # and REDIS_TLS_SERVERNAME provides the SNI needed to handshake with the
+    # shard endpoints this database announces.
+    clustering_policy = "OSSCluster"
+    eviction_policy   = "NoEviction"
   }
 
   tags = {
