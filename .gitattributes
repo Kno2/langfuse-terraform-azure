@@ -1,0 +1,6 @@
+# Terraform heredocs (the Helm values in langfuse.tf and clickhouse.tf) keep their line endings, so
+# a Windows checkout with core.autocrlf=true renders "\r\n" into the Helm release values. A plan from
+# Windows and a plan from Linux CI then disagree and keep redeploying the release. Force LF.
+*.tf     text eol=lf
+*.tftpl  text eol=lf
+*.hcl    text eol=lf
