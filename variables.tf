@@ -282,6 +282,12 @@ variable "ssl_certificate_secret_id" {
   default     = null
 }
 
+variable "key_vault_admin_object_id" {
+  description = "Object ID granted the module Key Vault's admin access policy. Defaults to the identity running Terraform; set it when more than one identity runs Terraform (for example CI and people), or each run replaces the policy."
+  type        = string
+  default     = null
+}
+
 variable "signup_disabled" {
   description = "Disable public sign up (sets langfuse.features.signUpDisabled in the Helm chart)"
   type        = bool
